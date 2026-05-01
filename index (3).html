@@ -4167,8 +4167,10 @@ function initNavHighlight() {
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
   // استعادة إعدادات Supabase
-  const savedUrl = localStorage.getItem('sb_url');
-  const savedKey = localStorage.getItem('sb_key');
+   const savedUrl = localStorage.getItem('sb_url') || "https://uarxwjugllkgliwhcaew.supabase.co";
+const savedKey = localStorage.getItem('sb_key') || "Sb_publishable_662ysfTRW6MT-eGgPFm37w_MSRKh4fV";
+
+  
   if (savedUrl && savedKey) {
     document.getElementById('sb-url') && (document.getElementById('sb-url').value = savedUrl);
     document.getElementById('sb-key') && (document.getElementById('sb-key').value = savedKey);
