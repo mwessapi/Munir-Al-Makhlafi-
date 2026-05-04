@@ -4551,7 +4551,7 @@ function initNavHighlight() {
 // تشغيل عند التحميل
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. استعادة إعدادات وسجلات الاتصال بـ Supabase
+  // 1. استعادة إعدادات الاتصال بـ Supabase
   const savedUrl = localStorage.getItem('sb_url');
   const savedKey = localStorage.getItem('sb_key');
   if (savedUrl && savedKey) {
@@ -4562,14 +4562,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(badge) badge.innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
   }
 
-  // 2. استعادة كلمة مرور الإدارة
+  // 2. استعادة كلمة المرور
   const savedPass = localStorage.getItem('admin_pass');
   if (savedPass) adminPassword = savedPass;
 
-  // 3. دالة موحدة لتحديث كافة صور البروفايل في الموقع
+  // 3. دالة تحديث الصور (تطابق الـ IDs في موقعك)
   const updateAllImages = (url) => {
     if (!url || url.trim() === "") return;
-    const ids = ['profile-img', 'mobile-profile-img', 'sidebar-profile-img', 'admin-profile-preview'];
+    const ids = ['profile-img', 'mobile-profile-img', 'sidebar-profile-img', 'admin-profile-preview', 'photo-preview-thumb'];
     ids.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
@@ -4579,50 +4579,82 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // 4. استعادة الصورة من الذاكرة المحلية (المسمى الموحد مطابق لقاعدة البيانات)
-  const savedPhoto = localStorage.getItem('profile_image');
-  if (savedPhoto) {
-    updateAllImages(savedPhoto);
-  }
+  // 4. استعادة سريعة من الذاكرة المحلية
+  const cachedPhoto = localStorage.getItem('profile_image');
+  if (cachedPhoto) updateAllImages(cachedPhoto);
 
-  // 5. استعادة صورة الملف من Supabase (البحث عن مفتاح profile_image)
+  // 5. الربط الحقيقي مع SQL (الحل الجذري للمشكلة)
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
-      const { data: photoData } = await supabaseClient
+      // هنا نطلب من سوبا بيز القيمة المرتبطة بمفتاح profile_image الذي أنشأته أنت في SQL
+      const { data, error } = await supabaseClient
         .from('site_settings')
         .select('value')
-        .eq('key', 'profile_image') 
+        .eq('key', 'profile_image')
         .single();
         
-      if (photoData && photoData.value) {
-        updateAllImages(photoData.value);
-        localStorage.setItem('profile_image', photoData.value); // حفظ لضمان الثبات عند الرفرش
+      if (data && data.value) {
+        updateAllImages(data.value);
+        localStorage.setItem('profile_image', data.value);
+        // وضع الرابط في التكست أريا ليبقى ظاهراً في لوحة التحكم
+        const pPhotoInput = document.getElementById('p-photo');
+        if(pPhotoInput) pPhotoInput.value = data.value;
       }
     } catch (e) {
-      console.log("استخدام التخزين المحلي للصورة");
+      console.log("يتم العرض من الذاكرة المحلية حالياً.");
     }
   }
 
-  // 6. تحميل بقية البيانات وعرضها (الأبحاث، الجوائز، إلخ)
-  if (typeof renderAll === 'function') {
-    await renderAll();
-  }
+  // 6. تحميل بقية الأقسام
+  if (typeof renderAll === 'function') await renderAll();
 
-  // 7. تأثيرات الظهور
+  // 7. التأثيرات وإغلاق القائمة
   if (typeof initScrollReveal === 'function') initScrollReveal();
   if (typeof initNavHighlight === 'function') initNavHighlight();
-
-  // 8. إغلاق قائمة الجوال عند النقر خارجها
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('mobile-menu');
-    const hamburger = document.getElementById('hamburger');
-    if (menu && hamburger) {
-      if (!menu.contains(e.target) && !hamburger.contains(e.target)) {
-        menu.classList.remove('open');
-      }
-    }
+    const hb = document.getElementById('hamburger');
+    if (menu && hb && !menu.contains(e.target) && !hb.contains(e.target)) menu.classList.remove('open');
   });
 });
+
+/**
+ * دالة حفظ البيانات (تعديل مباشر ليتوافق مع جداول SQL الخاصة بك)
+ */
+async function savePersonalInfo() {
+  const photoUrl = document.getElementById('p-photo').value;
+  const nameAr = document.getElementById('p-name-ar').value;
+
+  if (!supabaseClient) return alert("الرجاء التأكد من الاتصال بقاعدة البيانات");
+
+  try {
+    // تحديث رابط الصورة في جدول site_settings
+    await supabaseClient.from('site_settings').upsert({
+      key: 'profile_image',
+      value: photoUrl
+    });
+
+    // تحديث الاسم في جدول personal_info
+    await supabaseClient.from('personal_info').upsert({
+      id: 1,
+      name_ar: nameAr
+    });
+
+    localStorage.setItem('profile_image', photoUrl);
+    updateAllImages(photoUrl);
+    alert("تم التحديث بنجاح! جرب الرفرش الآن.");
+  } catch (err) {
+    alert("فشل الحفظ، تأكد من إعدادات SQL");
+  }
+}
+
+/**
+ * دالة المعاينة البسيطة
+ */
+function previewProfilePhoto() {
+  const url = document.getElementById('p-photo').value;
+  if (url) updateAllImages(url);
+}
 </script>
 </body>
 </html>
