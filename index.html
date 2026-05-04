@@ -4551,42 +4551,33 @@ function initNavHighlight() {
 // تشغيل عند التحميل
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. استعادة إعدادات الاتصال بـ Supabase
+  // 1. استعادة الاتصال
   const savedUrl = localStorage.getItem('sb_url');
   const savedKey = localStorage.getItem('sb_key');
   if (savedUrl && savedKey) {
-    if(document.getElementById('sb-url')) document.getElementById('sb-url').value = savedUrl;
-    if(document.getElementById('sb-key')) document.getElementById('sb-key').value = savedKey;
     initSupabase(savedUrl, savedKey);
     const badge = document.getElementById('conn-badge');
     if(badge) badge.innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
   }
 
-  // 2. استعادة كلمة المرور
-  const savedPass = localStorage.getItem('admin_pass');
-  if (savedPass) adminPassword = savedPass;
-
-  // 3. دالة تحديث الصور (تطابق الـ IDs في موقعك)
+  // 2. دالة التحديث الشامل (مع إضافة معالج للأخطاء)
   const updateAllImages = (url) => {
-    if (!url || url.trim() === "") return;
+    if (!url || url.length < 10) return;
     const ids = ['profile-img', 'mobile-profile-img', 'sidebar-profile-img', 'admin-profile-preview', 'photo-preview-thumb'];
     ids.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.src = url;
         el.style.display = 'block';
+        // في حال فشل الرابط لا تخفِ العنصر بل اترك المحاولة
+        el.onerror = () => console.log("رابط الصورة قد يتطلب تسجيل دخول أو غير مباشر");
       }
     });
   };
 
-  // 4. استعادة سريعة من الذاكرة المحلية
-  const cachedPhoto = localStorage.getItem('profile_image');
-  if (cachedPhoto) updateAllImages(cachedPhoto);
-
-  // 5. الربط الحقيقي مع SQL (الحل الجذري للمشكلة)
+  // 3. جلب الصورة "القوي" من قاعدة البيانات (SQL)
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
-      // هنا نطلب من سوبا بيز القيمة المرتبطة بمفتاح profile_image الذي أنشأته أنت في SQL
       const { data, error } = await supabaseClient
         .from('site_settings')
         .select('value')
@@ -4596,21 +4587,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (data && data.value) {
         updateAllImages(data.value);
         localStorage.setItem('profile_image', data.value);
-        // وضع الرابط في التكست أريا ليبقى ظاهراً في لوحة التحكم
-        const pPhotoInput = document.getElementById('p-photo');
-        if(pPhotoInput) pPhotoInput.value = data.value;
+        if(document.getElementById('p-photo')) document.getElementById('p-photo').value = data.value;
       }
     } catch (e) {
-      console.log("يتم العرض من الذاكرة المحلية حالياً.");
+      const local = localStorage.getItem('profile_image');
+      if(local) updateAllImages(local);
     }
   }
 
-  // 6. تحميل بقية الأقسام
+  // 4. بقية الأوامر وإغلاق القائمة
   if (typeof renderAll === 'function') await renderAll();
-
-  // 7. التأثيرات وإغلاق القائمة
-  if (typeof initScrollReveal === 'function') initScrollReveal();
-  if (typeof initNavHighlight === 'function') initNavHighlight();
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('mobile-menu');
     const hb = document.getElementById('hamburger');
@@ -4618,42 +4604,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-/**
- * دالة حفظ البيانات (تعديل مباشر ليتوافق مع جداول SQL الخاصة بك)
- */
+// دالة الحفظ التي تضمن تثبيت الرابط الطويل
 async function savePersonalInfo() {
-  const photoUrl = document.getElementById('p-photo').value;
+  const photoUrl = document.getElementById('p-photo').value.trim();
   const nameAr = document.getElementById('p-name-ar').value;
 
-  if (!supabaseClient) return alert("الرجاء التأكد من الاتصال بقاعدة البيانات");
+  if (!supabaseClient) return alert("تأكد من الاتصال");
 
   try {
-    // تحديث رابط الصورة في جدول site_settings
-    await supabaseClient.from('site_settings').upsert({
-      key: 'profile_image',
-      value: photoUrl
-    });
-
-    // تحديث الاسم في جدول personal_info
-    await supabaseClient.from('personal_info').upsert({
-      id: 1,
-      name_ar: nameAr
-    });
+    // إجبار الحفظ في SQL
+    await supabaseClient.from('site_settings').upsert({ key: 'profile_image', value: photoUrl });
+    await supabaseClient.from('personal_info').upsert({ id: 1, name_ar: nameAr });
 
     localStorage.setItem('profile_image', photoUrl);
     updateAllImages(photoUrl);
-    alert("تم التحديث بنجاح! جرب الرفرش الآن.");
-  } catch (err) {
-    alert("فشل الحفظ، تأكد من إعدادات SQL");
-  }
+    alert("تم الحفظ بنجاح! الرابط ثابت الآن في قاعدة البيانات.");
+  } catch (err) { alert("خطأ في الاتصال بالقاعدة"); }
 }
 
-/**
- * دالة المعاينة البسيطة
- */
 function previewProfilePhoto() {
   const url = document.getElementById('p-photo').value;
-  if (url) updateAllImages(url);
+  updateAllImages(url);
 }
 </script>
 </body>
