@@ -4566,9 +4566,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const savedPass = localStorage.getItem('admin_pass');
   if (savedPass) adminPassword = savedPass;
 
-  // 3. دالة موحدة لتحديث كافة صور البروفايل (لضمان عدم الاختفاء)
+  // 3. دالة موحدة لتحديث كافة صور البروفايل في الموقع
   const updateAllImages = (url) => {
-    if (!url) return;
+    if (!url || url.trim() === "") return;
     const ids = ['profile-img', 'mobile-profile-img', 'sidebar-profile-img', 'admin-profile-preview'];
     ids.forEach(id => {
       const el = document.getElementById(id);
@@ -4579,13 +4579,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // 4. استعادة الصورة من الذاكرة المحلية (المسمى الموحد profile_image)
+  // 4. استعادة الصورة من الذاكرة المحلية (المسمى الموحد)
   const savedPhoto = localStorage.getItem('profile_image');
   if (savedPhoto) {
     updateAllImages(savedPhoto);
   }
 
-  // 5. استعادة صورة الملف من Supabase وتثبيتها
+  // 5. جلب الصورة من Supabase وتثبيتها عند التحميل
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
       const { data: photoData } = await supabaseClient
@@ -4599,7 +4599,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.setItem('profile_image', photoData.value);
       }
     } catch (e) {
-      console.log("استخدام التخزين المحلي");
+      console.log("استخدام التخزين المحلي للصورة");
     }
   }
 
@@ -4608,7 +4608,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderAll();
   }
 
-  // 7. تأثيرات
+  // 7. تأثيرات الظهور
   if (typeof initScrollReveal === 'function') initScrollReveal();
   if (typeof initNavHighlight === 'function') initNavHighlight();
 
@@ -4623,6 +4623,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 });
+
+/**
+ * تعديل دالة الحفظ لضمان حفظ رابط الصورة في جدول site_settings
+ * هذا الجزء هو المسؤول عن حل مشكلة عدم الحفظ التي واجهتها
+ */
+async function savePersonalInfo() {
+  const photoUrl = document.getElementById('p-photo').value;
+  
+  if (supabaseClient) {
+    // حفظ رابط الصورة في جدول الإعدادات بشكل مستقل لضمان الثبات
+    await supabaseClient.from('site_settings').upsert({
+      key: 'profile_image',
+      value: photoUrl
+    }, { onConflict: 'key' });
+    
+    // تحديث الصورة في الواجهة فوراً
+    localStorage.setItem('profile_image', photoUrl);
+    const ids = ['profile-img', 'mobile-profile-img', 'sidebar-profile-img'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.src = photoUrl;
+    });
+  }
+  
+  // استكمال بقية عملية الحفظ (الاسم والنبذة) التي كانت تعمل أصلاً
+  if (typeof originalSavePersonalInfo === 'function') {
+    originalSavePersonalInfo();
+  }
+}
 </script>
 </body>
 </html>
