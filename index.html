@@ -4555,21 +4555,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const savedUrl = localStorage.getItem('sb_url');
   const savedKey = localStorage.getItem('sb_key');
   if (savedUrl && savedKey) {
-    const urlInput = document.getElementById('sb-url');
-    const keyInput = document.getElementById('sb-key');
-    if (urlInput) urlInput.value = savedUrl;
-    if (keyInput) keyInput.value = savedKey;
+    if(document.getElementById('sb-url')) document.getElementById('sb-url').value = savedUrl;
+    if(document.getElementById('sb-key')) document.getElementById('sb-key').value = savedKey;
     initSupabase(savedUrl, savedKey);
     const badge = document.getElementById('conn-badge');
-    if (badge) badge.innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
+    if(badge) badge.innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
   }
 
   // 2. استعادة كلمة المرور
   const savedPass = localStorage.getItem('admin_pass');
   if (savedPass) adminPassword = savedPass;
 
-  // 3. دالة تحديث كافة صور البروفايل (لحل مشكلة الاختفاء)
-  const updateAllProfileImages = (url) => {
+  // 3. دالة موحدة لتحديث كافة صور البروفايل (لضمان عدم الاختفاء)
+  const updateAllImages = (url) => {
     if (!url) return;
     const ids = ['profile-img', 'mobile-profile-img', 'sidebar-profile-img', 'admin-profile-preview'];
     ids.forEach(id => {
@@ -4581,14 +4579,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // 4. استعادة الصورة من الذاكرة المحلية (profile_image مسمى موحد)
+  // 4. استعادة الصورة من الذاكرة المحلية (المسمى الموحد profile_image)
   const savedPhoto = localStorage.getItem('profile_image');
   if (savedPhoto) {
-    updateAllProfileImages(savedPhoto);
+    updateAllImages(savedPhoto);
   }
 
-  // 5. استعادة الصورة من Supabase وتثبيتها
-  if (supabaseClient) {
+  // 5. استعادة صورة الملف من Supabase وتثبيتها
+  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
       const { data: photoData } = await supabaseClient
         .from('site_settings')
@@ -4597,22 +4595,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         .single();
         
       if (photoData && photoData.value) {
-        updateAllProfileImages(photoData.value);
-        localStorage.setItem('profile_image', photoData.value); // حفظ بالمسمى الموحد
+        updateAllImages(photoData.value);
+        localStorage.setItem('profile_image', photoData.value);
       }
     } catch (e) {
-      console.log("استخدام الصورة المخزنة مؤقتاً");
+      console.log("استخدام التخزين المحلي");
     }
   }
 
   // 6. تحميل البيانات وعرضها
-  await renderAll();
+  if (typeof renderAll === 'function') {
+    await renderAll();
+  }
 
   // 7. تأثيرات
   if (typeof initScrollReveal === 'function') initScrollReveal();
   if (typeof initNavHighlight === 'function') initNavHighlight();
 
-  // 8. إغلاق قائمة الجوال
+  // 8. إغلاق قائمة الجوال عند النقر خارجها
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('mobile-menu');
     const hamburger = document.getElementById('hamburger');
@@ -4623,3 +4623,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 });
+</script>
+</body>
+</html>
