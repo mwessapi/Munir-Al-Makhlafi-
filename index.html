@@ -4551,7 +4551,7 @@ function initNavHighlight() {
 // تشغيل عند التحميل
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. استعادة إعدادات Supabase
+  // 1. استعادة إعدادات وسجلات الاتصال بـ Supabase
   const savedUrl = localStorage.getItem('sb_url');
   const savedKey = localStorage.getItem('sb_key');
   if (savedUrl && savedKey) {
@@ -4562,7 +4562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(badge) badge.innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
   }
 
-  // 2. استعادة كلمة المرور
+  // 2. استعادة كلمة مرور الإدارة
   const savedPass = localStorage.getItem('admin_pass');
   if (savedPass) adminPassword = savedPass;
 
@@ -4579,31 +4579,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // 4. استعادة الصورة من الذاكرة المحلية (المسمى الموحد)
+  // 4. استعادة الصورة من الذاكرة المحلية (المسمى الموحد مطابق لقاعدة البيانات)
   const savedPhoto = localStorage.getItem('profile_image');
   if (savedPhoto) {
     updateAllImages(savedPhoto);
   }
 
-  // 5. جلب الصورة من Supabase وتثبيتها عند التحميل
+  // 5. استعادة صورة الملف من Supabase (البحث عن مفتاح profile_image)
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
       const { data: photoData } = await supabaseClient
         .from('site_settings')
         .select('value')
-        .eq('key', 'profile_image')
+        .eq('key', 'profile_image') 
         .single();
         
       if (photoData && photoData.value) {
         updateAllImages(photoData.value);
-        localStorage.setItem('profile_image', photoData.value);
+        localStorage.setItem('profile_image', photoData.value); // حفظ لضمان الثبات عند الرفرش
       }
     } catch (e) {
       console.log("استخدام التخزين المحلي للصورة");
     }
   }
 
-  // 6. تحميل البيانات وعرضها
+  // 6. تحميل بقية البيانات وعرضها (الأبحاث، الجوائز، إلخ)
   if (typeof renderAll === 'function') {
     await renderAll();
   }
@@ -4623,35 +4623,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 });
-
-/**
- * تعديل دالة الحفظ لضمان حفظ رابط الصورة في جدول site_settings
- * هذا الجزء هو المسؤول عن حل مشكلة عدم الحفظ التي واجهتها
- */
-async function savePersonalInfo() {
-  const photoUrl = document.getElementById('p-photo').value;
-  
-  if (supabaseClient) {
-    // حفظ رابط الصورة في جدول الإعدادات بشكل مستقل لضمان الثبات
-    await supabaseClient.from('site_settings').upsert({
-      key: 'profile_image',
-      value: photoUrl
-    }, { onConflict: 'key' });
-    
-    // تحديث الصورة في الواجهة فوراً
-    localStorage.setItem('profile_image', photoUrl);
-    const ids = ['profile-img', 'mobile-profile-img', 'sidebar-profile-img'];
-    ids.forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.src = photoUrl;
-    });
-  }
-  
-  // استكمال بقية عملية الحفظ (الاسم والنبذة) التي كانت تعمل أصلاً
-  if (typeof originalSavePersonalInfo === 'function') {
-    originalSavePersonalInfo();
-  }
-}
 </script>
 </body>
 </html>
