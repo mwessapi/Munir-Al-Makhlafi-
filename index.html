@@ -4550,9 +4550,8 @@ function initNavHighlight() {
 // =====================================================
 // تشغيل عند التحميل
 // =====================================================
-<script>
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. استعادة إعدادات وسجلات الاتصال بـ Supabase
+  // 1. استعادة إعدادات Supabase
   const savedUrl = localStorage.getItem('sb_url');
   const savedKey = localStorage.getItem('sb_key');
   if (savedUrl && savedKey) {
@@ -4560,92 +4559,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     const keyInput = document.getElementById('sb-key');
     if (urlInput) urlInput.value = savedUrl;
     if (keyInput) keyInput.value = savedKey;
-    
     initSupabase(savedUrl, savedKey);
-    
     const badge = document.getElementById('conn-badge');
-    if (badge) {
-      badge.innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
-    }
+    if (badge) badge.innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
   }
 
-  // 2. استعادة كلمة مرور الإدارة
+  // 2. استعادة كلمة المرور
   const savedPass = localStorage.getItem('admin_pass');
   if (savedPass) adminPassword = savedPass;
 
-  /**
-   * 3. دالة موحدة لتحديث كل صور البروفايل في الموقع
-   * تضمن ظهور الصورة في (الديسكتوب، الجوال، الشريط الجانبي، ولوحة التحكم)
-   */
+  // 3. دالة تحديث كافة صور البروفايل (لحل مشكلة الاختفاء)
   const updateAllProfileImages = (url) => {
     if (!url) return;
-    // تم إضافة معرفات الصور التي قد تكون موجودة في تصميمك
-    const ids = [
-      'profile-img', 
-      'mobile-profile-img', 
-      'sidebar-profile-img', 
-      'admin-profile-preview'
-    ];
+    const ids = ['profile-img', 'mobile-profile-img', 'sidebar-profile-img', 'admin-profile-preview'];
     ids.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.src = url;
-        el.style.display = 'block'; // التأكد من عدم بقائها مخفية
+        el.style.display = 'block';
       }
     });
   };
 
-  /**
-   * 4. نظام استعادة الصورة الثابت (Cache-First)
-   * نبدأ بالذاكرة المحلية لسرعة الظهور، ثم نحدث من سوبا بيز للدقة
-   */
-  const cachedPhoto = localStorage.getItem('profile_image'); // توحيد المسمى ليكون profile_image
-  if (cachedPhoto) {
-    updateAllProfileImages(cachedPhoto);
+  // 4. استعادة الصورة من الذاكرة المحلية (profile_image مسمى موحد)
+  const savedPhoto = localStorage.getItem('profile_image');
+  if (savedPhoto) {
+    updateAllProfileImages(savedPhoto);
   }
 
-  // 5. جلب النسخة الأحدث من الصورة من قاعدة البيانات
+  // 5. استعادة الصورة من Supabase وتثبيتها
   if (supabaseClient) {
     try {
-      const { data: photoData, error } = await supabaseClient
+      const { data: photoData } = await supabaseClient
         .from('site_settings')
         .select('value')
         .eq('key', 'profile_image')
         .single();
-
+        
       if (photoData && photoData.value) {
-        const remoteUrl = photoData.value;
-        updateAllProfileImages(remoteUrl);
-        // حفظ المسمى الموحد لضمان الثبات بعد الرفرش
-        localStorage.setItem('profile_image', remoteUrl); 
+        updateAllProfileImages(photoData.value);
+        localStorage.setItem('profile_image', photoData.value); // حفظ بالمسمى الموحد
       }
-    } catch (err) {
-      console.warn("تنبيه: تعذر تحديث الصورة من قاعدة البيانات، تم استخدام النسخة المحفوظة.");
+    } catch (e) {
+      console.log("استخدام الصورة المخزنة مؤقتاً");
     }
   }
 
-  // 6. تحميل بقية بيانات الأقسام (الجوائز، الأبحاث، إلخ)
-  try {
-    await renderAll();
-  } catch (e) {
-    console.error("خطأ أثناء تحميل البيانات:", e);
-  }
+  // 6. تحميل البيانات وعرضها
+  await renderAll();
 
-  // 7. تشغيل تأثيرات الظهور والتنقل
+  // 7. تأثيرات
   if (typeof initScrollReveal === 'function') initScrollReveal();
   if (typeof initNavHighlight === 'function') initNavHighlight();
 
-  // 8. منطق إغلاق قائمة الجوال (للموبايل)
+  // 8. إغلاق قائمة الجوال
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('mobile-menu');
     const hamburger = document.getElementById('hamburger');
-    if (menu && hamburger && menu.classList.contains('open')) {
+    if (menu && hamburger) {
       if (!menu.contains(e.target) && !hamburger.contains(e.target)) {
         menu.classList.remove('open');
       }
     }
   });
 });
-</script>
-</body>
-</html>
