@@ -4551,29 +4551,21 @@ function initNavHighlight() {
 // تشغيل عند التحميل
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  // استعادة إعدادات Supabase
-  const savedUrl = localStorage.getItem('sb_url'); // سطر 557
-  const savedKey = localStorage.getItem('sb_key'); // سطر 558
-  if (savedUrl && savedKey) {
-    document.getElementById('sb-url') && (document.getElementById('sb-url').value = savedUrl);
-    document.getElementById('sb-key') && (document.getElementById('sb-key').value = savedKey);
-    initSupabase(savedUrl, savedKey);
+  // اد   // --- إعدادات Supabase الثابتة (لضمان عمل الموقع عند الجميع تلقائياً) ---
+  const sbUrl = "https://uarxwjugllkgliwhcaew.supabase.co"; 
+  const sbKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhcnh3anVnbGxrZ2xpd2hjYWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2NTMwNjIsImV4cCI6MjA5MzIyOTA2Mn0.bh3xg39NbWixkoLyzYpOEOQa4vjMFtZJ8xWfmYFo2cE"; 
+
+  // الاتصال المباشر بالقاعدة فوراً
+  initSupabase(sbUrl, sbKey);
+
+  // تحديث بيانات لوحة التحكم تلقائياً لكي تظهر الإعدادات فيها
+  if (document.getElementById('sb-url')) document.getElementById('sb-url').value = sbUrl;
+  if (document.getElementById('sb-key')) document.getElementById('sb-key').value = sbKey;
+  if (document.getElementById('conn-badge')) {
     document.getElementById('conn-badge').innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
   }
 
-
-  // استعادة كلمة المرور
-  const savedPass = localStorage.getItem('admin_pass');
-  if (savedPass) adminPassword = savedPass;
-
-  // استعادة صورة الملف الشخصي
-  const savedPhoto = localStorage.getItem('profile_photo');
-  if (savedPhoto) {
-    const img = document.getElementById('profile-img');
-    if (img) img.src = savedPhoto;
-    const mImg = document.getElementById('mobile-profile-img');
-    if (mImg) { mImg.src = savedPhoto; mImg.style.display = 'block'; }
-  }
+  
 
   // استعادة صورة الملف من Supabase إذا كان متصلاً
   if (supabaseClient) {
