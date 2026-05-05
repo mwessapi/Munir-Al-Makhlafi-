@@ -4552,14 +4552,15 @@ function initNavHighlight() {
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
   // استعادة إعدادات Supabase
-  const savedUrl = localStorage.getItem('sb_url');
-  const savedKey = localStorage.getItem('sb_key');
+  const savedUrl = localStorage.getItem('sb_url'); // سطر 557
+  const savedKey = localStorage.getItem('sb_key'); // سطر 558
   if (savedUrl && savedKey) {
     document.getElementById('sb-url') && (document.getElementById('sb-url').value = savedUrl);
     document.getElementById('sb-key') && (document.getElementById('sb-key').value = savedKey);
     initSupabase(savedUrl, savedKey);
     document.getElementById('conn-badge').innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
   }
+
 
   // استعادة كلمة المرور
   const savedPass = localStorage.getItem('admin_pass');
