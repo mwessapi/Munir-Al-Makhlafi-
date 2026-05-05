@@ -4551,22 +4551,23 @@ function initNavHighlight() {
 // تشغيل عند التحميل
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  // اد   // --- إعدادات Supabase الثابتة (لضمان عمل الموقع عند الجميع تلقائياً) ---
+  // --- جلب الإعدادات من Render أو استخدام القيم الافتراضية ---
   const sbUrl = "https://uarxwjugllkgliwhcaew.supabase.co"; 
   const sbKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhcnh3anVnbGxrZ2xpd2hjYWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2NTMwNjIsImV4cCI6MjA5MzIyOTA2Mn0.bh3xg39NbWixkoLyzYpOEOQa4vjMFtZJ8xWfmYFo2cE"; 
 
-  // الاتصال المباشر بالقاعدة فوراً
+  // الاتصال المباشر
   initSupabase(sbUrl, sbKey);
 
-  // تحديث بيانات لوحة التحكم تلقائياً لكي تظهر الإعدادات فيها
-  if (document.getElementById('sb-url')) document.getElementById('sb-url').value = sbUrl;
-  if (document.getElementById('sb-key')) document.getElementById('sb-key').value = sbKey;
-  if (document.getElementById('conn-badge')) {
-    document.getElementById('conn-badge').innerHTML = '<span class="connection-badge connected">متصل بـ Supabase</span>';
-  }
-
+  // تحديث واجهة لوحة التحكم
+  const urlInput = document.getElementById('sb-url');
+  const keyInput = document.getElementById('sb-key');
+  if (urlInput) urlInput.value = sbUrl;
+  if (keyInput) keyInput.value = sbKey;
   
-
+  const badge = document.getElementById('conn-badge');
+  if (badge) {
+    badge.innerHTML = '<span class="connection-badge connected">متصل بـ Supabase (عبر Render)</span>';
+  }
   // استعادة صورة الملف من Supabase إذا كان متصلاً
   if (supabaseClient) {
     const { data: photoData } = await supabaseClient.from('site_settings').select('value').eq('key','profile_image').single();
