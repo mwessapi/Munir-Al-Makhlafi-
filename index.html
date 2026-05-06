@@ -4211,22 +4211,40 @@ function previewProfilePhoto() {
   const thumb = document.getElementById('photo-preview-thumb');
   thumb.src = url;
   thumb.style.display = 'block';
-  thumb.onerror = () => { thumb.style.display='none'; showToast('تعذّر تحميل الصورة من هذا الرابط','error'); };
+  thumb.onerror = () => { 
+    thumb.style.display='none'; 
+    showToast('تعذّر تحميل الصورة من هذا الرابط','error'); 
+  };
 }
 
 function applyProfilePhoto(url) {
   if (!url) return;
+  
+  // 1. الصورة الرئيسية
   const img = document.getElementById('profile-img');
   if (img) img.src = url;
-  // تحديث صورة الشريط الجانبي - موبايل
+
+  // 2. تحديث صورة الجوال (مع الحفاظ على منطق التدرج اللوني الخاص بك)
   const mImg = document.getElementById('mobile-profile-img');
   if (mImg) {
     mImg.src = url;
     mImg.style.display = 'block';
-    // إزالة الخطأ السابق وإعادة الصورة
     mImg.onerror = function() {
-      this.parentElement.style.background='linear-gradient(135deg,#1a4a8a,#0a1628)';
-      this.style.display='none';
+      this.parentElement.style.background = 'linear-gradient(135deg,#1a4a8a,#0a1628)';
+      this.style.display = 'none';
+    };
+  }
+
+  // 3. الجزء الجديد: تحديث صورة الشريط الجانبي (Sidebar)
+  const sImg = document.getElementById('sidebar-profile-img');
+  if (sImg) {
+    sImg.src = url;
+    sImg.style.display = 'block';
+    sImg.onerror = function() {
+      // إذا فشلت صورة السايد بار، نخفيها أيضاً
+      this.style.display = 'none';
+}
+
     };
   }
 }
