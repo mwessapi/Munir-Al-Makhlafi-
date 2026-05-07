@@ -3525,7 +3525,7 @@ async function renderMemberships() {
 // =====================================================
 // التنقل في لوحة التحكم
 // =====================================================
-let adminPassword = 'admin123';
+let adminPassword = 'admin123321';
 
 function openAdminLogin() {
   document.getElementById('admin-overlay').classList.add('open');
@@ -3539,7 +3539,7 @@ function closeAdminLogin() {
 
 function checkLogin() {
   const pass = document.getElementById('admin-pass').value;
-  if (pass === adminPassword || pass === 'admin123') {
+  if (pass === adminPassword || pass === 'admin123321') {
     closeAdminLogin();
     openAdminDashboard();
   } else {
