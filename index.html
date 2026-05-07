@@ -4612,7 +4612,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         // أول مرة: نحفظ الافتراضية في Supabase
         const saved = localStorage.getItem('admin_pass');
-        adminPassword = saved || 'admin123';
+        adminPassword = saved || 'admin123321';
         await supabaseClient.from('site_settings')
           .upsert({ key: 'admin_password', value: adminPassword }, { onConflict: 'key' });
       }
