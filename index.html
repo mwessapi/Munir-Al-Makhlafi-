@@ -2050,10 +2050,7 @@ footer {
       <div class="hero-btns">
         <a href="#research" class="btn-primary">
           <i class="fa fa-flask"></i> الأبحاث العلمية
-        </a>
-        <a href="#contact" class="btn-secondary">
-          <i class="fa fa-envelope"></i> تواصل معي
-        </a>
+        </a> 
         <a href="https://www.linkedin.com/in/professor-muneer-a-s-hazaa-al-mekhlafi-%D8%A7-%D8%AF-%D9%85%D9%86%D9%8A%D8%B1-%D8%A7%D9%84%D9%85%D8%AE%D9%84%D8%A7%D9%81%D9%8A-80a04b19" target="_blank" class="btn-secondary">
           <i class="fab fa-linkedin"></i> LinkedIn
         </a>
@@ -3528,7 +3525,7 @@ async function renderMemberships() {
 // =====================================================
 // التنقل في لوحة التحكم
 // =====================================================
-let adminPassword = 'admin123';
+let adminPassword = 'admin123321';
 
 function openAdminLogin() {
   document.getElementById('admin-overlay').classList.add('open');
@@ -3542,7 +3539,7 @@ function closeAdminLogin() {
 
 function checkLogin() {
   const pass = document.getElementById('admin-pass').value;
-  if (pass === adminPassword || pass === 'admin123') {
+  if (pass === adminPassword || pass === 'admin123321') {
     closeAdminLogin();
     openAdminDashboard();
   } else {
